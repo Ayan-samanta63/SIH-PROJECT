@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   LayoutDashboard, MapPinned, ScrollText, Building2, Wallet, Home as HomeIcon,
-  Map, FolderOpen, BarChart3, Bell, Settings, Menu, X, Sun, Moon,
+  FolderOpen, BarChart3, Bell, Settings, Menu, X, Sun, Moon,
   Search, Filter, ChevronDown, ChevronRight, Globe2, UserCircle2,
   TrendingUp, TrendingDown, Users, CheckCircle2, Clock, AlertTriangle,
   FileText, Download, ArrowUpRight, ArrowDownRight, Landmark, Sparkles,
@@ -40,38 +40,6 @@ const STATUS_COLOR = {
 };
 
 /* ================================ MOCK DATA =============================== */
-const STATE_GRID = [
-  { name: "Jammu & Kashmir", row: 0, col: 3, projects: 4, risk: "Medium" },
-  { name: "Ladakh", row: 0, col: 4, projects: 1, risk: "Low" },
-  { name: "Himachal Pradesh", row: 1, col: 3, projects: 3, risk: "Low" },
-  { name: "Punjab", row: 1, col: 2, projects: 6, risk: "Medium" },
-  { name: "Uttarakhand", row: 1, col: 4, projects: 3, risk: "Low" },
-  { name: "Arunachal Pradesh", row: 1, col: 7, projects: 2, risk: "Low" },
-  { name: "Haryana", row: 2, col: 3, projects: 7, risk: "High" },
-  { name: "Rajasthan", row: 2, col: 2, projects: 9, risk: "Medium" },
-  { name: "Uttar Pradesh", row: 2, col: 4, projects: 14, risk: "High" },
-  { name: "Bihar", row: 2, col: 5, projects: 8, risk: "High" },
-  { name: "Sikkim", row: 2, col: 6, projects: 1, risk: "Low" },
-  { name: "Assam", row: 2, col: 7, projects: 5, risk: "Medium" },
-  { name: "Nagaland", row: 2, col: 8, projects: 1, risk: "Low" },
-  { name: "Meghalaya", row: 3, col: 7, projects: 2, risk: "Low" },
-  { name: "Manipur", row: 3, col: 8, projects: 1, risk: "Medium" },
-  { name: "Gujarat", row: 3, col: 1, projects: 10, risk: "Medium" },
-  { name: "Madhya Pradesh", row: 3, col: 3, projects: 11, risk: "Medium" },
-  { name: "Chhattisgarh", row: 3, col: 4, projects: 6, risk: "High" },
-  { name: "Jharkhand", row: 3, col: 5, projects: 7, risk: "Critical" },
-  { name: "West Bengal", row: 3, col: 6, projects: 9, risk: "Medium" },
-  { name: "Tripura", row: 4, col: 7, projects: 1, risk: "Low" },
-  { name: "Mizoram", row: 4, col: 8, projects: 1, risk: "Low" },
-  { name: "Maharashtra", row: 4, col: 2, projects: 15, risk: "Medium" },
-  { name: "Telangana", row: 4, col: 4, projects: 6, risk: "Medium" },
-  { name: "Odisha", row: 4, col: 5, projects: 8, risk: "Critical" },
-  { name: "Goa", row: 5, col: 2, projects: 1, risk: "Low" },
-  { name: "Karnataka", row: 5, col: 3, projects: 10, risk: "Low" },
-  { name: "Andhra Pradesh", row: 5, col: 4, projects: 7, risk: "Medium" },
-  { name: "Kerala", row: 6, col: 3, projects: 4, risk: "Low" },
-  { name: "Tamil Nadu", row: 6, col: 4, projects: 9, risk: "Medium" },
-];
 
 const PROJECTS = [
   { id: "LA-2024-0182", name: "Purvanchal Expressway Extension", state: "Uttar Pradesh", district: "Ghazipur", area: 412.6, families: 1840, stage: "Compensation Paid", progress: 82, comp: "Partially Paid", priority: "High", updated: "28 Aug 2026", status: "In Progress" },
@@ -345,7 +313,6 @@ const NAV = [
   { key: "projects", label: "Projects", icon: Building2 },
   { key: "compensation", label: "Compensation", icon: Wallet },
   { key: "rehabilitation", label: "Rehabilitation & Resettlement", icon: HomeIcon },
-  { key: "gis", label: "GIS Map", icon: Map },
   { key: "documents", label: "Documents", icon: FolderOpen },
   { key: "reports", label: "Reports & Analytics", icon: BarChart3 },
   { key: "alerts", label: "Alerts", icon: Bell },
@@ -591,13 +558,6 @@ function DashboardHome({ setPage, openProject }) {
             Real-time monitoring, transparent land acquisition management and decision support.
           </p>
           <div className="flex gap-3 mt-5 flex-wrap">
-            <button
-              onClick={() => setPage("gis")}
-              style={{ background: "#fff", color: C.navy }}
-              className="px-4 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg transition-all flex items-center gap-2"
-            >
-              <Map size={16} /> Open GIS Map
-            </button>
             <button
               onClick={() => setPage("reports")}
               style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.35)" }}
@@ -1316,126 +1276,6 @@ function RehabilitationPage() {
   );
 }
 
-/* ================================== GIS MAP PAGE ============================== */
-function GisMapPage({ openProject }) {
-  const [stateFilter, setStateFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [typeFilter, setTypeFilter] = useState("All");
-  const [q, setQ] = useState("");
-  const [activeState, setActiveState] = useState(null);
-
-  const maxRow = Math.max(...STATE_GRID.map((s) => s.row));
-  const maxCol = Math.max(...STATE_GRID.map((s) => s.col));
-
-  const riskColor = { Low: C.green, Medium: C.saffron, High: C.amber, Critical: C.red };
-
-  const filteredProjects = PROJECTS.filter(
-    (p) =>
-      (stateFilter === "All" || p.state === stateFilter) &&
-      (statusFilter === "All" || p.status === statusFilter) &&
-      (p.name.toLowerCase().includes(q.toLowerCase()) || p.district.toLowerCase().includes(q.toLowerCase()) || p.state.toLowerCase().includes(q.toLowerCase()))
-  );
-
-  return (
-    <div className="space-y-5">
-      <SectionTitle eyebrow="Geo-spatial monitoring" title="GIS Land Acquisition Map" />
-
-      <Card className="p-4">
-        <div className="flex flex-wrap gap-3 items-center">
-          <div className="flex items-center gap-2 rounded-lg px-3 py-2 flex-1 min-w-[200px]" style={{ background: "var(--track)" }}>
-            <Search size={15} style={{ color: "var(--muted)" }} />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search location, district, project..." style={{ color: "var(--text)" }} className="bg-transparent outline-none text-sm w-full" />
-          </div>
-          <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value)} style={{ background: "var(--track)", color: "var(--text)" }} className="text-sm rounded-lg px-3 py-2 outline-none">
-            <option>All</option>
-            {[...new Set(PROJECTS.map((p) => p.state))].map((s) => <option key={s}>{s}</option>)}
-          </select>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ background: "var(--track)", color: "var(--text)" }} className="text-sm rounded-lg px-3 py-2 outline-none">
-            <option>All</option>
-            <option>Completed</option><option>In Progress</option><option>Pending</option><option>Critical</option>
-          </select>
-          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ background: "var(--track)", color: "var(--text)" }} className="text-sm rounded-lg px-3 py-2 outline-none">
-            <option>All Land Types</option><option>Agricultural</option><option>Residential</option><option>Commercial</option><option>Barren</option>
-          </select>
-        </div>
-      </Card>
-
-      <div className="grid lg:grid-cols-5 gap-5">
-        <Card className="p-5 lg:col-span-3">
-          <div className="flex items-center justify-between mb-3">
-            <span style={{ color: "var(--text)" }} className="text-sm font-bold">State-wise Project Grid Map</span>
-            <div className="flex items-center gap-3 text-[10.5px]" style={{ color: "var(--muted)" }}>
-              {Object.entries(riskColor).map(([k, v]) => (
-                <span key={k} className="flex items-center gap-1"><span style={{ background: v }} className="w-2 h-2 rounded-full" />{k}</span>
-              ))}
-            </div>
-          </div>
-          <div
-            className="grid gap-1.5 select-none"
-            style={{
-              gridTemplateRows: `repeat(${maxRow + 1}, minmax(34px, 1fr))`,
-              gridTemplateColumns: `repeat(${maxCol + 1}, minmax(34px, 1fr))`,
-            }}
-          >
-            {STATE_GRID.map((s) => (
-              <button
-                key={s.name}
-                onClick={() => setActiveState(s.name === activeState ? null : s.name)}
-                title={s.name}
-                style={{
-                  gridRow: s.row + 1,
-                  gridColumn: s.col + 1,
-                  background: riskColor[s.risk],
-                  opacity: activeState && activeState !== s.name ? 0.35 : 1,
-                  outline: activeState === s.name ? `2px solid ${C.navyDeep}` : "none",
-                  outlineOffset: 2,
-                }}
-                className="rounded-md flex flex-col items-center justify-center text-white text-[8.5px] font-bold leading-tight p-0.5 hover:scale-[1.08] transition-all duration-150 shadow-sm"
-              >
-                <span className="truncate w-full text-center">{s.name.split(" ").map((w) => w[0]).join("").slice(0, 3)}</span>
-                <span className="text-[9px] opacity-90">{s.projects}</span>
-              </button>
-            ))}
-          </div>
-          <p style={{ color: "var(--muted)" }} className="text-[10.5px] mt-3">
-            Illustrative statistical grid map (tile cartogram) — tile position approximates state location; tile colour reflects delay-risk level, and the number shows active projects. Click a tile to filter the list.
-          </p>
-        </Card>
-
-        <Card className="p-5 lg:col-span-2 max-h-[430px] flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <span style={{ color: "var(--text)" }} className="text-sm font-bold">
-              {activeState ? `Projects in ${activeState}` : "All Project Markers"}
-            </span>
-            {activeState && <button onClick={() => setActiveState(null)} style={{ color: C.navy }} className="text-xs font-bold">Clear</button>}
-          </div>
-          <div className="space-y-2.5 overflow-y-auto pr-1">
-            {filteredProjects.filter((p) => !activeState || p.state === activeState).map((p) => (
-              <button
-                key={p.id}
-                onClick={() => openProject(p)}
-                style={{ background: "var(--track)" }}
-                className="w-full text-left p-3 rounded-xl hover:shadow-sm transition-all flex items-start gap-2.5"
-              >
-                <span style={{ background: STATUS_COLOR[p.status] }} className="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0" />
-                <div className="min-w-0">
-                  <div style={{ color: "var(--text)" }} className="text-[12.5px] font-bold truncate">{p.name}</div>
-                  <div style={{ color: "var(--muted)" }} className="text-[11px] mt-0.5">{p.district}, {p.state}</div>
-                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                    <Badge tone={statusTone(p.status)}>{p.status}</Badge>
-                    <span style={{ color: "var(--muted)" }} className="text-[10.5px]">{p.area} Ha · {p.families} families</span>
-                  </div>
-                </div>
-              </button>
-            ))}
-            {filteredProjects.length === 0 && <p style={{ color: "var(--muted)" }} className="text-sm text-center py-6">No matching projects.</p>}
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
 /* =============================== DOCUMENTS PAGE =============================== */
 function DocumentsPage() {
   const docs = [
@@ -1470,6 +1310,19 @@ function DocumentsPage() {
   );
 }
 
+const STATE_ACQUISITION_REPORT = [
+  { state: "Uttar Pradesh", projects: 14 },
+  { state: "Maharashtra", projects: 15 },
+  { state: "Bihar", projects: 8 },
+  { state: "Odisha", projects: 8 },
+  { state: "Gujarat", projects: 10 },
+  { state: "Karnataka", projects: 10 },
+  { state: "Andhra Pradesh", projects: 7 },
+  { state: "Jharkhand", projects: 7 },
+  { state: "Madhya Pradesh", projects: 11 },
+  { state: "Tamil Nadu", projects: 9 },
+];
+
 /* ============================= REPORTS & ANALYTICS PAGE ======================= */
 function ReportsPage({ showToast }) {
   return (
@@ -1486,7 +1339,7 @@ function ReportsPage({ showToast }) {
         <Card className="p-5">
           <SectionTitle title="State-wise Acquisition (Projects)" />
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={STATE_GRID.slice(0, 10).sort((a,b)=>b.projects-a.projects)}>
+            <BarChart data={STATE_ACQUISITION_REPORT.slice(0, 10).sort((a,b)=>b.projects-a.projects)}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
               <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval={0} angle={-30} textAnchor="end" height={60} />
               <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
@@ -1651,10 +1504,9 @@ function SettingsPage({ dark, setDark }) {
 }
 
 /* =================================== LANDING PAGE =============================== */
-function LandingPage({ onEnter, onMap }) {
+function LandingPage({ onEnter }) {
   const features = [
     { icon: Activity, title: "Real-Time Monitoring", text: "Live progress tracking across survey, notification, approval, compensation and possession stages." },
-    { icon: Map, title: "GIS-Based Land Management", text: "Visualise projects across states with status-coded markers and drill-down details." },
     { icon: Wallet, title: "Transparent Compensation", text: "End-to-end visibility of disbursals, pending dues and beneficiary verification." },
     { icon: HomeIcon, title: "Rehabilitation & Resettlement", text: "Track relocation, housing and employment-assistance outcomes for affected families." },
     { icon: Sparkles, title: "Decision Support", text: "Simulated risk signals highlight delay-prone projects and bottleneck districts." },
@@ -1692,9 +1544,6 @@ function LandingPage({ onEnter, onMap }) {
         <div className="flex items-center justify-center gap-3 mt-8 flex-wrap">
           <button onClick={onEnter} style={{ background: C.navy }} className="text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2 hover:shadow-lg transition-all">
             Explore Dashboard <ChevronRight size={17} />
-          </button>
-          <button onClick={onMap} style={{ borderColor: C.navy, color: C.navy }} className="border font-bold px-6 py-3 rounded-xl flex items-center gap-2 hover:bg-[var(--hover)] transition-all">
-            <Map size={17} /> View GIS Map
           </button>
         </div>
 
@@ -1780,7 +1629,7 @@ export default function App() {
     return (
       <div style={vars} className={dark ? "dark" : ""}>
         <GlobalStyle />
-        <LandingPage onEnter={() => { setEntered(true); setPage("dashboard"); }} onMap={() => { setEntered(true); setPage("gis"); }} />
+        <LandingPage onEnter={() => { setEntered(true); setPage("dashboard"); }} />
       </div>
     );
   }
@@ -1792,7 +1641,6 @@ export default function App() {
     projects: <ProjectsPage openProject={setProject} />,
     compensation: <CompensationPage />,
     rehabilitation: <RehabilitationPage />,
-    gis: <GisMapPage openProject={setProject} />,
     documents: <DocumentsPage />,
     reports: <ReportsPage showToast={showToast} />,
     alerts: <AlertsPage alerts={alerts} setAlerts={setAlerts} />,
